@@ -21,32 +21,12 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
-          python3-pip \
-          build-essential \
-          git \
-          python3-dev \
-          ffmpeg \
-          libsdl2-dev \
-          libsdl2-image-dev \
-          libsdl2-mixer-dev \
-          libsdl2-ttf-dev \
-          libportmidi-dev \
-          libswscale-dev \
-          libavformat-dev \
-          libavcodec-dev \
-          zlib1g-dev \
-          libgstreamer1.0-dev \
-          gstreamer1.0-plugins-base \
-          gstreamer1.0-plugins-good \
-          openjdk-17-jdk \
-          unzip \
-          zip \
-          autoconf \
-          libtool \
-          pkg-config \
-          libncurses5-dev \
-          libffi-dev \
-          libssl-dev
+          python3-pip build-essential git python3-dev ffmpeg \
+          libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
+          libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev \
+          zlib1g-dev libgstreamer1.0-dev gstreamer1.0-plugins-base \
+          gstreamer1.0-plugins-good openjdk-17-jdk unzip zip autoconf \
+          libtool pkg-config libncurses5-dev libffi-dev libssl-dev
 
     - name: Set up Java
       uses: actions/setup-java@v4
@@ -58,21 +38,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install flet buildozer
-
-    - name: Generate clean buildozer.spec
-      run: |
-        rm -f buildozer.spec
-        buildozer init
-        # Forcer les paramètres stables dans le fichier de config
-        sed -i 's/^#title =.*/title = Mon Application Flet/' buildozer.spec
-        sed -i 's/^#package.name =.*/package.name = tam/' buildozer.spec
-        sed -i 's/^#package.domain =.*/package.domain = org.impactlab/' buildozer.spec
-        sed -i 's/^#source.include_exts =.*/source.include_exts = py,png,jpg,kv,atlas/' buildozer.spec
-        sed -i 's/^#requirements =.*/requirements = python3,flet/' buildozer.spec
-        sed -i 's/^#android.api =.*/android.api = 33/' buildozer.spec
-        sed -i 's/^android.api = 31/android.api = 33/' buildozer.spec
-        sed -i 's/^#android.minapi =.*/android.minapi = 24/' buildozer.spec
-        sed -i 's/^#android.build_tools_version =.*/android.build_tools_version = 33.0.0/' buildozer.spec
 
     - name: Accept Android SDK licenses
       run: |
