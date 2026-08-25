@@ -16,5 +16,5 @@ android.ndk = 25b
 android.build_tools_version = 33.0.0
 android.accept_sdk_license = True
 
-# Supprimer la restriction à une seule architecture pour cibler TOUS les téléphones Android (Itel, Tecno, etc.)
-android.archs = armeabi-v7a, arm64-v8a
+# Cibler exclusivement armeabi-v7a garantit une compatibilité maximale sur les téléphones Itel / Tecno et un build stable
+android.archs = armeabi-v7a
