@@ -59,16 +59,21 @@ jobs:
         python -m pip install --upgrade pip
         pip install flet buildozer
 
-    - name: Create buildozer.spec if not exists
+    - name: Create and configure buildozer.spec
       run: |
         if [ ! -f buildozer.spec ]; then
           buildozer init
         fi
+        # Forcer l'utilisation d'une version d'Android stable dans le fichier de config
+        sed -i 's/# android.api = 31/android.api = 33/g' buildozer.spec
+        sed -i 's/android.api = 31/android.api = 33/g' buildozer.spec
+        sed -i 's/# android.minapi = 21/android.minapi = 24/g' buildozer.spec
+        sed -i 's/android.minapi = 21/android.minapi = 24/g' buildozer.spec
 
-    - name: Accept all Android SDK licenses
+    - name: Accept Android SDK licenses and install tools
       run: |
         yes | sdkmanager --licenses || true
-        sdkmanager "build-tools;34.0.0" "platforms;android-34" || true
+        sdkmanager "build-tools;33.0.0" "platforms;android-33" "platform-tools" || true
 
     - name: Build APK with Buildozer
       run: |
