@@ -21,7 +21,7 @@ jobs:
 
     - name: Build APK with Buildozer
       run: |
-        yes | buildozer -v android release
+        yes | buildozer -v android debug
 
     - name: Find and check files
       run: |
@@ -34,5 +34,4 @@ jobs:
         path: |
           bin/*.apk
           *.apk
-          bin/*.aab
           **/*.apk
