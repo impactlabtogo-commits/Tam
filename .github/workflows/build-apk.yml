@@ -39,3 +39,4 @@ jobs:
         with:
           name: tam-app-release
           path: build/flutter/android/app/outputs/flutter-apk/app-release.apk
+
