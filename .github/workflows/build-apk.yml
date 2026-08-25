@@ -15,9 +15,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Fix directory permissions
+    - name: Fix directory permissions and cache
       run: |
         git config --global --add safe.directory /__w/Tam/Tam
+        mkdir -p /github/home/.cache/pip
+        chmod -R 777 /github/home/.cache
 
     - name: Build APK with Buildozer
       run: |
