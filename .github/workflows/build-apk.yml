@@ -59,11 +59,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install flet buildozer
 
-    - name: Accept Android SDK licenses automatically
+    - name: Create buildozer.spec if not exists
       run: |
-        mkdir -p /home/runner/.android
-        touch /home/runner/.android/repositories.cfg
-        yes | sdkmanager --licenses || true
+        if [ ! -f buildozer.spec ]; then
+          buildozer init
+        fi
 
     - name: Build APK with Buildozer
       run: |
