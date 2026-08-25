@@ -10,10 +10,11 @@ orientation = portrait
 fullscreen = 0
 android.permissions = INTERNET
 android.api = 33
-android.minapi = 24
+android.minapi = 21
 android.sdk = 33
 android.ndk = 25b
 android.build_tools_version = 33.0.0
 android.accept_sdk_license = True
-# Limiter à une seule architecture pour accélérer et stabiliser le build
-android.archs = arm64-v8a
+
+# Supprimer la restriction à une seule architecture pour cibler TOUS les téléphones Android (Itel, Tecno, etc.)
+android.archs = armeabi-v7a, arm64-v8a
