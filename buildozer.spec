@@ -15,3 +15,5 @@ android.sdk = 33
 android.ndk = 25b
 android.build_tools_version = 33.0.0
 android.accept_sdk_license = True
+# Limiter à une seule architecture pour accélérer et stabiliser le build
+android.archs = arm64-v8a
