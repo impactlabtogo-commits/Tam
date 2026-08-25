@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: kivy/buildozer:latest
-      options: --user root
 
     steps:
     - name: Checkout repository
@@ -18,10 +17,11 @@ jobs:
     - name: Fix directory permissions
       run: |
         git config --global --add safe.directory /__w/Tam/Tam
+        chown -R user:user /__w/Tam/Tam || true
 
     - name: Build APK with Buildozer
       run: |
-        yes | buildozer -v android debug
+        buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
