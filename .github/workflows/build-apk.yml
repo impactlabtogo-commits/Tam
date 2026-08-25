@@ -20,11 +20,8 @@ jobs:
         git config --global --add safe.directory /__w/Tam/Tam
 
     - name: Build APK with Buildozer
-      env:
-        BUILDOZER_ALLOW_ROOT: "1"
-        BUILDOZER_ALLOW_ROOT_REASON: "Running inside GitHub Actions container as root"
       run: |
-        buildozer -v android debug
+        yes | buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
