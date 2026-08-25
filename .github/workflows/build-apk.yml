@@ -59,21 +59,24 @@ jobs:
         python -m pip install --upgrade pip
         pip install flet buildozer
 
-    - name: Create and configure buildozer.spec
+    - name: Generate clean buildozer.spec
       run: |
-        if [ ! -f buildozer.spec ]; then
-          buildozer init
-        fi
-        # Forcer l'utilisation d'une version d'Android stable dans le fichier de config
-        sed -i 's/# android.api = 31/android.api = 33/g' buildozer.spec
-        sed -i 's/android.api = 31/android.api = 33/g' buildozer.spec
-        sed -i 's/# android.minapi = 21/android.minapi = 24/g' buildozer.spec
-        sed -i 's/android.minapi = 21/android.minapi = 24/g' buildozer.spec
+        rm -f buildozer.spec
+        buildozer init
+        # Forcer les paramètres stables dans le fichier de config
+        sed -i 's/^#title =.*/title = Mon Application Flet/' buildozer.spec
+        sed -i 's/^#package.name =.*/package.name = tam/' buildozer.spec
+        sed -i 's/^#package.domain =.*/package.domain = org.impactlab/' buildozer.spec
+        sed -i 's/^#source.include_exts =.*/source.include_exts = py,png,jpg,kv,atlas/' buildozer.spec
+        sed -i 's/^#requirements =.*/requirements = python3,flet/' buildozer.spec
+        sed -i 's/^#android.api =.*/android.api = 33/' buildozer.spec
+        sed -i 's/^android.api = 31/android.api = 33/' buildozer.spec
+        sed -i 's/^#android.minapi =.*/android.minapi = 24/' buildozer.spec
+        sed -i 's/^#android.build_tools_version =.*/android.build_tools_version = 33.0.0/' buildozer.spec
 
-    - name: Accept Android SDK licenses and install tools
+    - name: Accept Android SDK licenses
       run: |
         yes | sdkmanager --licenses || true
-        sdkmanager "build-tools;33.0.0" "platforms;android-33" "platform-tools" || true
 
     - name: Build APK with Buildozer
       run: |
