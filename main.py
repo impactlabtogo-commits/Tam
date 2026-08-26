@@ -5,10 +5,9 @@ def main(page: ft.Page):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     
-    # Simple texte de démarrage stable
-    page.add(
-        ft.Text("Bienvenue sur Tam", size=20, weight=ft.FontWeight.BOLD),
-        ft.ElevatedButton("Tester", on_click=lambda e: print("Clic OK"))
-    )
+    # Ajout d'un contrôle visuel simple et direct
+    txt = ft.Text("Tam Mobile - Prêt", size=22, weight=ft.FontWeight.BOLD)
+    page.add(txt)
 
-ft.app(target=main)
+if __name__ == "__main__":
+    ft.app(target=main)
