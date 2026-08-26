@@ -1,167 +1,76 @@
-from fastapi import FastAPI, HTTPException, status
-from pydantic import BaseModel, Field
-from datetime import datetime
-import hashlib
+import flet as ft
+import requests
 
-app = FastAPI(title="Tam Global Secure API", version="4.1")
+# URL de votre backend en ligne sur Render
+API_URL = "https://tam-backend-srv-da67vu67bikc7385j9t0.onrender.com"
 
-# Base de données multi-pays et multi-devises (Solde initial large pour les tests)
-COMPTES_DB = {
-    "+22800000000": {
-        "nom": "Tam Services (Commissions)",
-        "pays": "Togo",
-        "devise": "XOF",
-        "solde": 0.0,
-        "pin_hash": hashlib.sha256("0000".encode()).hexdigest(),
-        "historique": [],
-        "tentatives_echouees": 0,
-        "bloque": False
-    },
-    "+22890000001": {
-        "nom": "Koffi Mensah",
-        "pays": "Togo",
-        "devise": "XOF",
-        "solde": 500000.0,
-        "pin_hash": hashlib.sha256("1234".encode()).hexdigest(),
-        "historique": [],
-        "tentatives_echouees": 0,
-        "bloque": False
-    },
-    "+233241234567": { 
-        "nom": "Kwame Mensah",
-        "pays": "Ghana",
-        "devise": "GHS",
-        "solde": 5000.0,
-        "pin_hash": hashlib.sha256("1234".encode()).hexdigest(),
-        "historique": [],
-        "tentatives_echouees": 0,
-        "bloque": False
-    },
-    "+33612345678": { 
-        "nom": "Sophie Martin",
-        "pays": "France",
-        "devise": "EUR",
-        "solde": 2000.0,
-        "pin_hash": hashlib.sha256("1234".encode()).hexdigest(),
-        "historique": [],
-        "tentatives_echouees": 0,
-        "bloque": False
-    },
-}
+def main(page: ft.Page):
+    page.title = "Tam Mobile"
+    page.vertical_alignment = ft.MainAxisAlignment.CENTER
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    page.padding = 20
 
-# Taux de change de référence par rapport au XOF
-TAUX_CHANGE_VERS_XOF = {
-    "XOF": 1.0,
-    "GHS": 55.0,
-    "EUR": 655.957,
-    "USD": 600.0
-}
+    # Composants de l'interface utilisateur
+    titre_app = ft.Text("Tam - Services Financiers", size=22, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE_700)
+    telephone_input = ft.TextField(label="Numéro de téléphone (ex: +22890000001)", width=300)
+    solde_text = ft.Text(value="", size=15, text_align=ft.TextAlign.CENTER)
+    loader = ft.ProgressRing(visible=False)
 
-class TransfertRequest(BaseModel):
-    expéditeur_telephone: str = Field(..., pattern=r"^\+\d{8,15}$")
-    destinataire_telephone: str = Field(..., pattern=r"^\+\d{8,15}$")
-    montant: float = Field(..., gt=0)
-    pin: str = Field(..., min_length=4, max_length=4)
+    def verifier_solde_clic(e):
+        tel = telephone_input.value.strip()
+        if not tel:
+            solde_text.value = "⚠️ Veuillez entrer un numéro de téléphone."
+            solde_text.color = ft.colors.RED
+            page.update()
+            return
+        
+        # Affichage du chargement
+        loader.visible = True
+        solde_text.value = "Connexion au serveur..."
+        solde_text.color = ft.colors.BLACK
+        page.update()
 
-def convertir_montant(montant: float, devise_source: str, devise_cible: str) -> float:
-    if devise_source == devise_cible:
-        return montant
-    montant_en_xof = montant * TAUX_CHANGE_VERS_XOF.get(devise_source, 1.0)
-    taux_cible = TAUX_CHANGE_VERS_XOF.get(devise_cible, 1.0)
-    return round(montant_en_xof / taux_cible, 2)
+        try:
+            # Requête sécurisée vers votre API Render avec un délai d'attente (timeout) de 10 secondes
+            response = requests.get(f"{API_URL}/solde/{tel}", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                solde_text.value = f"✅ Nom : {data['nom']}\n💰 Solde : {data['solde']} {data['devise']}\n🌍 Pays : {data['pays']}"
+                solde_text.color = ft.colors.GREEN_800
+            else:
+                detail = response.json().get('detail', 'Compte introuvable')
+                solde_text.value = f"❌ Erreur : {detail}"
+                solde_text.color = ft.colors.RED
+        except requests.exceptions.ConnectionError:
+            solde_text.value = "🌐 Erreur de réseau : Vérifiez votre connexion Internet (Wi-Fi ou 4G)."
+            solde_text.color = ft.colors.RED
+        except requests.exceptions.Timeout:
+            solde_text.value = "⏱️ Le serveur met trop de temps à répondre. Réessayez."
+            solde_text.color = ft.colors.RED
+        except Exception as ex:
+            solde_text.value = f"❌ Erreur inattendue : {ex}"
+            solde_text.color = ft.colors.RED
+        
+        loader.visible = False
+        page.update()
 
-@app.get("/solde/{telephone}")
-def verifier_solde(telephone: str):
-    if telephone not in COMPTES_DB:
-        raise HTTPException(status_code=404, detail="Compte introuvable.")
-    compte = COMPTES_DB[telephone]
-    if compte["bloque"]:
-        raise HTTPException(status_code=403, detail="Compte temporairement bloqué pour sécurité.")
-    
-    return {
-        "telephone": telephone,
-        "nom": compte["nom"],
-        "pays": compte["pays"],
-        "devise": compte["devise"],
-        "solde": compte["solde"],
-        "historique": compte["historique"]
-    }
+    btn_valider = ft.ElevatedButton(
+        text="Consulter mon solde", 
+        on_click=verifier_solde_clic,
+        bgcolor=ft.colors.BLUE,
+        color=ft.colors.WHITE
+    )
 
-@app.post("/transferer/")
-def transferer_argent(data: TransfertRequest):
-    if data.expéditeur_telephone not in COMPTES_DB:
-        raise HTTPException(status_code=400, detail="Numéro d'expéditeur non enregistré.")
-    
-    compte_exp = COMPTES_DB[data.expéditeur_telephone]
-    
-    if compte_exp["bloque"]:
-        raise HTTPException(status_code=403, detail="🔒 Compte bloqué suite à des tentatives suspectes.")
-    
-    pin_haché_saisi = hashlib.sha256(data.pin.encode()).hexdigest()
-    if compte_exp["pin_hash"] != pin_haché_saisi:
-        compte_exp["tentatives_echouees"] += 1
-        if compte_exp["tentatives_echouees"] >= 3:
-            compte_exp["bloque"] = True
-            raise HTTPException(status_code=403, detail="🚨 3 erreurs de PIN. Compte sécurisé et bloqué !")
-        restant = 3 - compte_exp["tentatives_echouees"]
-        raise HTTPException(status_code=400, detail=f"Code PIN incorrect. Il vous reste {restant} tentative(s).")
-    
-    compte_exp["tentatives_echouees"] = 0
+    # Ajout des éléments sur la page de l'application
+    page.add(
+        titre_app,
+        ft.Divider(height=20, color=ft.colors.TRANSPARENT),
+        telephone_input,
+        ft.Divider(height=10, color=ft.colors.TRANSPARENT),
+        btn_valider,
+        ft.Divider(height=15, color=ft.colors.TRANSPARENT),
+        loader,
+        solde_text
+    )
 
-    if data.destinataire_telephone not in COMPTES_DB:
-        raise HTTPException(status_code=400, detail="Numéro du destinataire introuvable.")
-    
-    if data.expéditeur_telephone == data.destinataire_telephone:
-        raise HTTPException(status_code=400, detail="Impossible d'effectuer un transfert vers soi-même.")
-
-    compte_dest = COMPTES_DB[data.destinataire_telephone]
-    compte_admin = COMPTES_DB["+22800000000"]
-    
-    devise_exp = compte_exp["devise"]
-    devise_dest = compte_dest["devise"]
-    
-    frais_exp = data.montant * 0.04
-    total_a_debiter = data.montant + frais_exp
-    
-    if compte_exp["solde"] < total_a_debiter:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Solde insuffisant. Requis : {data.montant} + {frais_exp} (frais 4%) = {total_a_debiter} {devise_exp}"
-        )
-    
-    montant_recu_dest = convertir_montant(data.montant, devise_exp, devise_dest)
-    frais_en_xof = convertir_montant(frais_exp, devise_exp, "XOF")
-    
-    compte_exp["solde"] -= total_a_debiter
-    compte_dest["solde"] += montant_recu_dest
-    compte_admin["solde"] += frais_en_xof
-    
-    date_str = datetime.now().strftime("%d/%m/%Y à %H:%M")
-    
-    compte_exp["historique"].insert(0, {
-        "type": "Envoi",
-        "details": f"Vers {data.destinataire_telephone} ({montant_recu_dest} {devise_dest})",
-        "montant": f"-{total_a_debiter} {devise_exp}",
-        "date": date_str
-    })
-    
-    compte_dest["historique"].insert(0, {
-        "type": "Reçu",
-        "details": f"De {data.expéditeur_telephone}",
-        "montant": f"+{montant_recu_dest} {devise_dest}",
-        "date": date_str
-    })
-
-    compte_admin["historique"].insert(0, {
-        "type": "Reçu (Commission)",
-        "details": f"Via {data.expéditeur_telephone} ({data.montant} {devise_exp} convertis)",
-        "montant": f"+{frais_en_xof} XOF",
-        "date": date_str
-    })
-    
-    return {
-        "status": "success",
-        "message": f"Transfert réussi ! Le destinataire a reçu {montant_recu_dest} {devise_dest}.",
-        "frais": f"{frais_exp} {devise_exp} (Convertis en {frais_en_xof} XOF pour Tam Services)",
-        "nouveau_solde_expediteur": f"{compte_exp['solde']} {devise_exp}"
-    }
+ft.app(target=main)
